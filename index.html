@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>大學生生活費分析器</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
+      background: #fff8fb;
+      color: #333;
+    }
+    header {
+      background: linear-gradient(135deg, #ffb6cf, #ffd7e5);
+      padding: 42px 20px 34px;
+      text-align: center;
+    }
+    header h1 {
+      margin: 0 0 10px;
+      font-size: 34px;
+    }
+    header p {
+      margin: 0;
+      color: #6b4a56;
+      font-size: 16px;
+    }
+    .container {
+      max-width: 980px;
+      margin: 28px auto 50px;
+      padding: 0 18px;
+    }
+    .card {
+      background: white;
+      border-radius: 18px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 24px rgba(120, 75, 90, 0.09);
+    }
+    .card h2 {
+      margin-top: 0;
+      font-size: 22px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    input {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid #e4cbd3;
+      border-radius: 10px;
+      font-size: 15px;
+      outline: none;
+    }
+    input:focus {
+      border-color: #ff7fa7;
+      box-shadow: 0 0 0 3px rgba(255,127,167,.12);
+    }
+    button {
+      border: none;
+      background: #ff6f9f;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 16px;
+    }
+    button:hover { background: #ef5e90; }
+    .result {
+      display: none;
+      margin-top: 18px;
+      padding: 18px;
+      background: #fff1f6;
+      border-radius: 14px;
+    }
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 8px 0;
+      border-bottom: 1px dashed #e6c7d2;
+    }
+    .result-row:last-child { border-bottom: none; }
+    .big {
+      font-size: 25px;
+      font-weight: 800;
+      color: #e84f87;
+    }
+    .bar-wrap {
+      margin-top: 16px;
+      background: #f3e7eb;
+      height: 18px;
+      border-radius: 100px;
+      overflow: hidden;
+    }
+    .bar {
+      height: 100%;
+      width: 0%;
+      background: #ff7fa7;
+      transition: width .45s ease;
+    }
+    .tip {
+      margin-top: 14px;
+      line-height: 1.7;
+    }
+    .history-item {
+      padding: 12px 0;
+      border-bottom: 1px solid #f0e4e8;
+    }
+    .history-item:last-child { border-bottom: none; }
+    .empty {
+      color: #999;
+    }
+    footer {
+      text-align: center;
+      color: #999;
+      font-size: 13px;
+      padding: 15px 20px 30px;
+    }
+    @media (max-width: 680px) {
+      .grid { grid-template-columns: 1fr; }
+      header h1 { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>💰 大學生生活費分析器</h1>
+  <p>輸入每月預算與支出，快速看看自己的錢都花去哪裡。</p>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <h2>Step 1｜輸入本月資料</h2>
+    <div class="grid">
+      <div>
+        <label for="budget">每月可用預算（元）</label>
+        <input id="budget" type="number" min="0" placeholder="例如：15000">
+      </div>
+      <div>
+        <label for="food">餐飲</label>
+        <input id="food" type="number" min="0" placeholder="例如：5000">
+      </div>
+      <div>
+        <label for="transport">交通</label>
+        <input id="transport" type="number" min="0" placeholder="例如：1200">
+      </div>
+      <div>
+        <label for="shopping">購物</label>
+        <input id="shopping" type="number" min="0" placeholder="例如：2000">
+      </div>
+      <div>
+        <label for="entertainment">娛樂</label>
+        <input id="entertainment" type="number" min="0" placeholder="例如：1500">
+      </div>
+      <div>
+        <label for="other">其他</label>
+        <input id="other" type="number" min="0" placeholder="例如：1000">
+      </div>
+    </div>
+
+    <button onclick="analyze()">開始分析</button>
+
+    <div id="result" class="result">
+      <div class="result-row">
+        <span>本月總支出</span>
+        <strong id="totalExpense">$0</strong>
+      </div>
+      <div class="result-row">
+        <span>剩餘金額</span>
+        <strong id="remaining">$0</strong>
+      </div>
+      <div class="result-row">
+        <span>預算使用率</span>
+        <strong id="usage">0%</strong>
+      </div>
+
+      <div class="bar-wrap">
+        <div id="bar" class="bar"></div>
+      </div>
+
+      <div id="tip" class="tip"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Step 2｜本次支出重點</h2>
+    <div id="largestCategory" class="empty">完成分析後，這裡會顯示你花最多的項目。</div>
+  </div>
+
+  <div class="card">
+    <h2>Step 3｜分析紀錄</h2>
+    <div id="history" class="empty">目前還沒有分析紀錄。</div>
+  </div>
+
+</div>
+
+<footer>
+  Vibe Coding 練習作品｜大學生生活費分析器
+</footer>
+
+<script>
+  const historyData = [];
+
+  function getNumber(id) {
+    const value = Number(document.getElementById(id).value);
+    return isNaN(value) ? 0 : value;
+  }
+
+  function money(n) {
+    return "$" + Math.round(n).toLocaleString("zh-TW");
+  }
+
+  function analyze() {
+    const budget = getNumber("budget");
+    const categories = {
+      "餐飲": getNumber("food"),
+      "交通": getNumber("transport"),
+      "購物": getNumber("shopping"),
+      "娛樂": getNumber("entertainment"),
+      "其他": getNumber("other")
+    };
+
+    if (budget <= 0) {
+      alert("請先輸入大於 0 的每月預算！");
+      return;
+    }
+
+    const total = Object.values(categories).reduce((sum, n) => sum + n, 0);
+    const remaining = budget - total;
+    const usage = (total / budget) * 100;
+
+    document.getElementById("totalExpense").textContent = money(total);
+    document.getElementById("remaining").textContent = money(remaining);
+    document.getElementById("usage").textContent = usage.toFixed(1) + "%";
+
+    document.getElementById("bar").style.width = Math.min(usage, 100) + "%";
+    document.getElementById("result").style.display = "block";
+
+    let tip = "";
+    if (usage < 70) {
+      tip = "✅ 目前支出控制得不錯，還有一定的預算空間，可以考慮把部分餘額存下來。";
+    } else if (usage <= 100) {
+      tip = "⚠️ 已經使用大部分預算，接下來可以稍微減少非必要支出。";
+    } else {
+      tip = "🚨 本月已超出預算，建議先檢查購物、娛樂或其他彈性支出。";
+    }
+    document.getElementById("tip").textContent = tip;
+
+    let largestName = "";
+    let largestValue = -1;
+    for (const [name, value] of Object.entries(categories)) {
+      if (value > largestValue) {
+        largestValue = value;
+        largestName = name;
+      }
+    }
+
+    const percent = total > 0 ? (largestValue / total * 100).toFixed(1) : 0;
+    document.getElementById("largestCategory").classList.remove("empty");
+    document.getElementById("largestCategory").innerHTML =
+      `你本月支出最高的項目是 <strong>${largestName}</strong>，共 ${money(largestValue)}，約占總支出的 <strong>${percent}%</strong>。`;
+
+    historyData.unshift({
+      time: new Date().toLocaleString("zh-TW"),
+      total,
+      remaining,
+      usage
+    });
+
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const historyBox = document.getElementById("history");
+    historyBox.classList.remove("empty");
+    historyBox.innerHTML = "";
+
+    historyData.slice(0, 5).forEach((item, index) => {
+      const div = document.createElement("div");
+      div.className = "history-item";
+      div.innerHTML =
+        `<strong>第 ${historyData.length - index} 次分析</strong>｜
+         支出 ${money(item.total)}｜
+         剩餘 ${money(item.remaining)}｜
+         使用率 ${item.usage.toFixed(1)}%
+         <br><small>${item.time}</small>`;
+      historyBox.appendChild(div);
+    });
+  }
+</script>
+
+</body>
+</html>
